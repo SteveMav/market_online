@@ -50,7 +50,7 @@ class RegistrationForm(UserCreationForm):
     commune = forms.ChoiceField(
         choices=CITY_CHOICES,
         required=False, 
-        label='City', 
+        label='Ville', 
         widget=forms.Select(attrs={'class': 'form-control my-3', 'id': 'communeInput'}), 
         help_text=''
     )
@@ -75,7 +75,7 @@ class RegistrationForm(UserCreationForm):
             'username': '',
             'email': '',
             'phone_number': '',
-            'ville': '',
+            'commune': '',
         }
 
     # Custom initialization of the form
@@ -93,6 +93,13 @@ class RegistrationForm(UserCreationForm):
         user = super().save(commit=False)
         if commit:
             user.save()
-            profile = Profil(user=user, phone_number=self.cleaned_data['phone_number'], commune=self.cleaned_data['city'])
+            # Convert phone_number to integer
+            phone_number = int(self.cleaned_data['phone_number']) if self.cleaned_data['phone_number'] else None
+            # Create profile with commune as city
+            profile = Profil(
+                user=user,
+                phone_number=phone_number,
+                city=self.cleaned_data['commune']
+            )
             profile.save()
         return user

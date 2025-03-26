@@ -2,9 +2,13 @@
 
     yo bien ou quoi
 
+    <a href="{% url 'accounts:logout' %}">logout</a>
+
 {% else %}
-<a href="{% url 'accounts:login' %}">login</a>
+{% comment %} <a href="{% url 'accounts:login' %}">login</a> {% endcomment %}
 <a href="{% url 'accounts:register' %}">register</a>
+<a href="{% url 'accounts:login' %}"> login</a>
+
 
     
 

@@ -1,39 +1,62 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import RegistrationForm
-from validate_email_address import validate_email
-from django.utils.translation import gettext as _
+from django.views import View
+from .forms import RegistrationForm, LoginForm
 
-def register(request):
-    form = RegistrationForm()
 
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        
-        if not validate_email(request.POST.get('email')):
-            messages.warning(request, _('The email address is not valid.'))
-        elif form.is_valid():
-            try:
-                # Create user
+class Accounts(View):
+    def register(self, request):
+        form = RegistrationForm()
+
+        if request.method == 'POST':
+            form = RegistrationForm(request.POST)
+
+            if form.is_valid():
                 user = form.save()
-                # Authenticate and log in the user
-                login(request, user)
-                messages.success(request, _('Account created successfully!'))
-                return redirect('main:index')
-            except Exception as e:
-                messages.warning(request, _('Error creating account: ') + str(e))
-        else:
-            # Handle form validation errors
-            for field, errors in form.errors.items():
-                for error in errors:
-                    if 'username' in error:
-                        messages.warning(request, _('Username already taken, please choose another.'))
-                    elif 'email' in error:
-                        messages.warning(request, _('Email address already in use, please choose another.'))
-                    elif 'password' in error:
-                        messages.warning(request, _('Password error: ') + _(error))
-                    else:
-                        messages.warning(request, _('Error in field {field}: {error}').format(field=field, error=_(error)))
+                username = form.cleaned_data.get('username')
+                raw_password = form.cleaned_data.get('password1')
+                user = authenticate(username=username, password=raw_password)
+                if user is not None:
+                    login(request, user)
+                    messages.success(request, 'Account created successfully!')
+                    return redirect('main:index')
+                else:
+                    messages.error(request, 'Error logging in after account creation.')
+            else:
+                # Handle form validation errors
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.warning(request, 'Error in field {}: {}'.format(field, error))
 
-    return render(request, 'accounts/register.html', {'form': form})
+        return render(request, 'accounts/register.html', {'form': form})
+
+    def login(self, request):
+        form = LoginForm()
+
+        if request.method == 'POST':
+            form = LoginForm(request.POST)
+
+            if form.is_valid():
+                username = form.cleaned_data.get('username')
+                password = form.cleaned_data.get('password')
+                user = authenticate(username=username, password=password)
+                if user is not None:
+                    login(request, user)
+                    messages.success(request, 'Login successful!')
+                    return redirect('main:index')
+                else:
+                    messages.error(request, 'Invalid username or password.')
+            else:
+                # Handle form validation errors
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.warning(request, 'Error in field {}: {}'.format(field, error))
+
+        return render(request, 'accounts/login.html', {'form': form})
+
+
+    def deconnect(self, request):
+        logout(request)
+        return redirect('main:index')
+

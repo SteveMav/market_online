@@ -5,6 +5,6 @@ class Entreprise(models.Model):
     name = models.CharField(max_length=255)
     proprio = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField()
-    image = models.ImageField(upload_to='media/images_entreprises', null=True, blank=True)
+    image = models.ImageField(upload_to='images_entreprises/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
