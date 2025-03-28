@@ -1,0 +1,10 @@
+<h1> mes entreprises </h1>
+
+{% for entreprise in my_entreprise %}
+    <h2>{{entreprise.name}}</h2>
+    <p>{{entreprise.description}}</p>
+    <p>{{entreprise.category}}</p>
+    {%if entreprise.image %}
+   <img src="{{entreprise.image.url}}" alt="photo de l'entreprise" width='100px', height='100px'>
+    {% endif %}
+{% endfor %}
