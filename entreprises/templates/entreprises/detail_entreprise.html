@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                {% if entreprise.image %}
+                <img src="{{ entreprise.image.url }}" class="card-img-top" alt="{{ entreprise.name }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span class="text-muted">Pas d'image</span>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title">{{ entreprise.name }}</h1>
+                    <p class="card-text text-muted">{{ entreprise.category }}</p>
+                    <p class="card-text">{{ entreprise.description }}</p>
+                    <p class="card-text"><small class="text-muted">Créée le {{ entreprise.created_at|date:"d/m/Y" }}</small></p>
+                    
+                    {% if request.user == entreprise.proprio %}
+                    <div class="btn-group w-100 mt-3" role="group">
+                        <a href="{% url 'entreprises:update_entreprise' entreprise.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <a href="{% url 'entreprises:delete_entreprise' entreprise.id %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <h2 class="mb-4">Produits de l'entreprise</h2>
+            
+            {% if request.user == entreprise.proprio %}
+            <div class="mb-4">
+                <a href="#" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Ajouter un produit
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if products %}
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">Pas d'image</span>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text text-success fw-bold">{{ product.price }} €</p>
+                            <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <div class="d-grid">
+                                <a href="#" class="btn btn-outline-primary">Voir le produit</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <p>Cette entreprise n'a pas encore de produits.</p>
+                {% if request.user == entreprise.proprio %}
+                <a href="#" class="btn btn-primary mt-2">
+                    Ajouter mon premier produit
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

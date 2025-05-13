@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer {{ product.name }} - Market Online{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'main:index' %}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:my_products' %}">Mes produits</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Supprimer {{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white py-3">
+                    <h2 class="card-title mb-0 fw-bold">Supprimer le produit</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">Attention !</h5>
+                        <p>Vous êtes sur le point de supprimer définitivement le produit <strong>{{ product.name }}</strong>.</p>
+                        <p>Cette action est irréversible et supprimera toutes les données associées à ce produit.</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded">
+                            {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
+                                <span class="text-muted">Pas d'image</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h4>{{ product.name }}</h4>
+                            <p class="text-success fw-bold">{{ product.price }} €</p>
+                            <p>{{ product.description|truncatechars:150 }}</p>
+                            <p>
+                                <small class="text-muted">
+                                    <i class="fas fa-store me-1"></i> {{ product.entreprises.name }}
+                                    {% if product.category %}
+                                    <span class="mx-1">|</span>
+                                    <i class="fas fa-tag me-1"></i> {{ product.category.name }}
+                                    {% endif %}
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'products:update_product' product.id %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Tous les produits - Market Online{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold">Tous nos produits</h1>
+            <p class="lead text-muted">Découvrez notre sélection de produits de qualité</p>
+        </div>
+        <div class="col-lg-4">
+            <div class="d-flex justify-content-lg-end align-items-center h-100">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-sort me-1"></i> Trier par
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                        <li><a class="dropdown-item {% if sort_by == 'name' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}sort=name">Nom</a></li>
+                        <li><a class="dropdown-item {% if sort_by == 'price_asc' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}sort=price_asc">Prix croissant</a></li>
+                        <li><a class="dropdown-item {% if sort_by == 'price_desc' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}sort=price_desc">Prix décroissant</a></li>
+                        <li><a class="dropdown-item {% if sort_by == 'newest' %}active{% endif %}" href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}sort=newest">Plus récent</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if search_query %}
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-search me-2"></i> Résultats de recherche pour : <strong>{{ search_query }}</strong>
+        <a href="{% url 'products:product_list' %}{% if current_category %}?category={{ current_category }}{% endif %}" class="float-end text-decoration-none">
+            <i class="fas fa-times"></i> Effacer
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Filtres latéraux -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Catégories</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'products:product_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                            Toutes les catégories
+                        </a>
+                        {% for category in categories %}
+                        <a href="?{% if search_query %}q={{ search_query }}&{% endif %}category={{ category.id }}" class="list-group-item list-group-item-action {% if current_category == category.id|stringformat:'i' %}active{% endif %}">
+                            {{ category.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des produits -->
+        <div class="col-lg-9">
+            {% if products %}
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 product-card border-0 shadow-sm">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">Pas d'image</span>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text text-success fw-bold">{{ product.price }} €</p>
+                            <p class="card-text small text-muted">{{ product.description|truncatechars:60 }}</p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-store me-1"></i> {{ product.entreprises.name }}
+                                </small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'products:product_detail' product.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i> Voir le produit
+                                </a>
+                                <form method="post" action="{% url 'cart:add_to_cart' product.id %}" class="d-inline ajax-cart-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-shopping-cart me-1"></i> Ajouter au panier
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> Aucun produit ne correspond à votre recherche.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

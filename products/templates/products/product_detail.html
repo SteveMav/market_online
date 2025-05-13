@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - Market Online{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'main:index' %}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Produits</a></li>
+            {% if product.category %}
+            <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}?category={{ product.category.id }}">{{ product.category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Image du produit -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="max-height: 400px; object-fit: contain;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <span class="text-muted">Pas d'image disponible</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Détails du produit -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ product.name }}</h1>
+            
+            <div class="mb-3">
+                <span class="badge bg-primary">{{ product.category.name }}</span>
+                <a href="{% url 'entreprises:detail_entreprise' product.entreprises.id %}" class="text-decoration-none">
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-store me-1"></i> {{ product.entreprises.name }}
+                    </span>
+                </a>
+            </div>
+            
+            <p class="fs-4 fw-bold text-success mb-3">{{ product.price }} €</p>
+            
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p>{{ product.description }}</p>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex mb-4">
+                <form method="post" action="{% url 'cart:add_to_cart' product.id %}" class="flex-grow-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <div class="d-flex">
+                        <div class="input-group me-2" style="width: 120px;">
+                            <button type="button" class="btn btn-outline-secondary" id="decrease-quantity">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" name="quantity" value="1" min="1" max="99" class="form-control text-center" id="quantity-input">
+                            <button type="button" class="btn btn-outline-secondary" id="increase-quantity">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                            <i class="fas fa-shopping-cart me-2"></i> Ajouter au panier
+                        </button>
+                    </div>
+                </form>
+                <button class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+            
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-truck me-2"></i> Livraison
+                    </h5>
+                    <p class="card-text">Livraison standard en 3-5 jours ouvrables.</p>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-shield-alt me-2"></i> Garantie
+                    </h5>
+                    <p class="card-text">Garantie de satisfaction de 30 jours.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Produits similaires -->
+    {% if similar_products %}
+    <div class="mt-5">
+        <h3 class="mb-4">Produits similaires</h3>
+        <div class="row">
+            {% for product in similar_products %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 product-card border-0 shadow-sm">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span class="text-muted">Pas d'image</span>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-success fw-bold">{{ product.price }} €</p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <div class="d-grid">
+                            <a href="{% url 'products:product_detail' product.id %}" class="btn btn-outline-primary btn-sm">Voir le produit</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gestion des boutons de quantité
+        const decreaseBtn = document.getElementById('decrease-quantity');
+        const increaseBtn = document.getElementById('increase-quantity');
+        const quantityInput = document.getElementById('quantity-input');
+        
+        decreaseBtn.addEventListener('click', function() {
+            let value = parseInt(quantityInput.value);
+            if (value > 1) {
+                quantityInput.value = value - 1;
+            }
+        });
+        
+        increaseBtn.addEventListener('click', function() {
+            let value = parseInt(quantityInput.value);
+            if (value < 99) {
+                quantityInput.value = value + 1;
+            }
+        });
+    });
+</script>
+{% endblock %}

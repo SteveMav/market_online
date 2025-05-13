@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Market Online{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        /* Custom global styles */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .footer {
+            margin-top: auto;
+            padding: 2rem 0;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .product-card {
+            transition: transform 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'main:index' %}">
+                <i class="fas fa-store text-primary me-2"></i>Market Online
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'main:index' %}">
+                            <i class="fas fa-home me-1"></i>Accueil
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'products:product_list' %}">
+                            <i class="fas fa-box me-1"></i>Produits
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'entreprises:entreprises' %}">
+                            <i class="fas fa-store me-1"></i>Entreprises
+                        </a>
+                    </li>
+                    {% if user.is_authenticated and user.profil.is_seller %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="sellerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-store-alt me-1"></i>Espace vendeur
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="sellerDropdown">
+                            <li><a class="dropdown-item" href="{% url 'entreprises:my_entreprises' %}">
+                                <i class="fas fa-building me-2"></i>Mes entreprises
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'products:my_products' %}">
+                                <i class="fas fa-boxes me-2"></i>Mes produits
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'entreprises:create_entreprise' %}">
+                                <i class="fas fa-plus-circle me-2"></i>Créer une entreprise
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'products:create_product' %}">
+                                <i class="fas fa-plus-circle me-2"></i>Ajouter un produit
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- Search form -->
+                <form class="d-flex mx-auto" method="get" action="{% url 'products:product_list' %}">
+                    <div class="input-group">
+                        <input class="form-control" type="search" placeholder="Rechercher un produit..." aria-label="Search" name="q">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'cart:cart_summary' %}">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count">
+                                {% with total_items=request.session.cart_count|default:0 %}
+                                    {{ total_items }}
+                                {% endwith %}
+                            </span>
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if user.profil.profile_picture %}
+                            <img src="{{ user.profil.profile_picture.url }}" alt="{{ user.username }}" class="rounded-circle me-1" style="width: 24px; height: 24px; object-fit: cover;">
+                            {% else %}
+                            <i class="fas fa-user-circle me-1"></i>
+                            {% endif %}
+                            {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                <i class="fas fa-user-circle me-2"></i>Mon profil
+                            </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-shopping-bag me-2"></i>Mes commandes
+                            </a></li>
+                            {% if not user.profil.is_seller %}
+                            <li><a class="dropdown-item" href="{% url 'entreprises:create_entreprise' %}">
+                                <i class="fas fa-store me-2"></i>Devenir vendeur
+                            </a></li>
+                            {% endif %}
+                            {% if user.is_staff %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/" target="_blank">
+                                <i class="fas fa-cog me-2"></i>Administration
+                            </a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-primary btn-sm me-2 px-3" href="{% url 'accounts:login' %}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Connexion
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary btn-sm text-white px-3" href="{% url 'accounts:register' %}">
+                            <i class="fas fa-user-plus me-1"></i>Inscription
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>Market Online</h5>
+                    <p>Votre plateforme de vente en ligne pour tous vos besoins.</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>Liens rapides</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'main:index' %}" class="text-decoration-none">Accueil</a></li>
+                        <li><a href="{% url 'entreprises:entreprises' %}" class="text-decoration-none">Entreprises</a></li>
+                        <!-- <li><a href="#" class="text-decoration-none">Produits</a></li>
+                        <li><a href="#" class="text-decoration-none">À propos</a></li>
+                        <li><a href="#" class="text-decoration-none">Contact</a></li> -->
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contactez-nous</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-envelope me-2"></i> contact@marketonline.com</li>
+                        <li><i class="fas fa-phone me-2"></i> +1 234 567 890</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i> 123 Rue du Commerce, Ville</li>
+                    </ul>
+                    <div class="mt-3">
+                        <a href="#" class="text-decoration-none me-2"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-decoration-none me-2"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-decoration-none me-2"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-decoration-none"><i class="fab fa-linkedin fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="mb-0">&copy; {% now "Y" %} Market Online. Tous droits réservés.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AJAX pour le panier -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fonction pour mettre à jour le compteur du panier
+            function updateCartCount(count) {
+                const cartCountElements = document.querySelectorAll('.cart-count');
+                cartCountElements.forEach(element => {
+                    element.textContent = count;
+                    
+                    // Afficher ou masquer le badge en fonction du nombre d'articles
+                    if (count > 0) {
+                        element.classList.remove('d-none');
+                    } else {
+                        element.classList.add('d-none');
+                    }
+                });
+            }
+            
+            // Intercepter tous les formulaires d'ajout au panier
+            document.querySelectorAll('form[action^="{% url 'cart:add_to_cart' 0 %}".slice(0, -1)]').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const url = this.getAttribute('action');
+                    
+                    // Ajouter un en-tête pour identifier les requêtes AJAX
+                    const headers = {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    };
+                    
+                    // Envoyer la requête AJAX
+                    fetch(url, {
+                        method: 'POST',
+                        headers: headers,
+                        body: formData,
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Mettre à jour le compteur du panier
+                            updateCartCount(data.cart_count);
+                            
+                            // Afficher un message de succès
+                            const toastHTML = `
+                                <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                    <div class="d-flex">
+                                        <div class="toast-body">
+                                            <i class="fas fa-check-circle me-2"></i>${data.message}
+                                        </div>
+                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Créer le conteneur de toast s'il n'existe pas
+                            let toastContainer = document.querySelector('.toast-container');
+                            if (!toastContainer) {
+                                toastContainer = document.createElement('div');
+                                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                                document.body.appendChild(toastContainer);
+                            }
+                            
+                            // Ajouter le toast au conteneur
+                            toastContainer.innerHTML += toastHTML;
+                            
+                            // Initialiser et afficher le toast
+                            const toastElement = toastContainer.querySelector('.toast:last-child');
+                            const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
+                            toast.show();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de l\'ajout au panier:', error);
+                    });
+                });
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
